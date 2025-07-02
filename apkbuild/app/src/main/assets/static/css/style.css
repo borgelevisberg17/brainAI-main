@@ -1,0 +1,72 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #121212;
+  color: #eee;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  color: #4cc9f0;
+}
+
+.login-container, .chat-container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #1e1e1e;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+input {
+  background: #333;
+  color: #fff;
+}
+
+button {
+  background-color: #4cc9f0;
+  color: #000;
+  cursor: pointer;
+}
+
+button.logout-btn {
+  background-color: #f72585;
+  margin-top: 10px;
+}
+
+.chat-box {
+  background: #222;
+  border-radius: 8px;
+  height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+  margin: 20px 0;
+}
+
+#chatLog li {
+  list-style: none;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.subtitle {
+  color: #aaa;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+.input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

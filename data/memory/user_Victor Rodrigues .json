@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "text": "Oi"
+  },
+  {
+    "role": "user",
+    "text": "O que vamos estudar?"
+  },
+  {
+    "role": "ai",
+    "text": "Vamos focar em três áreas principais, cada uma com seus temas mais importantes:\n\n**1. LINGUAGENS, CÓDIGOS E SUAS TECNOLOGIAS (Português)**\n\n*   **Morfologia:** Vamos entender como as palavras são formadas e quais são suas classes (substantivos, adjetivos, verbos, etc.).\n*   **Sintaxe:** Vamos analisar a estrutura das frases e orações, aprendendo a identificar seus elementos e como eles se relacionam.\n*   **Redação:** Vamos dominar o texto dissertativo-argumentativo, com foco na estrutura, argumentação e proposta de intervenção.\n*   **Literatura:** Vamos explorar as escolas literárias, desde o Trovadorismo até o Pós-Modernismo, entendendo suas características e principais autores.\n\n**2. MATEMÁTICA E SUAS TECNOLOGIAS**\n\n*   **Números Reais:** Vamos revisar o conjunto dos números reais, suas operações, propriedades e como resolver equações e inequações.\n*   **Lógica Matemática:** Vamos aprender os elementos da lógica e como realizar operações lógicas.\n*   **Funções:** Vamos estudar todos os tipos de funções (polinomiais, racionais, trigonométricas, etc.), incluindo seus gráficos, propriedades e aplicações.\n*   **Limites e Continuidade:** Vamos entender o conceito de limite, suas propriedades e como calcular limites de funções.\n*   **Derivadas de Funções:** Vamos aprender a calcular derivadas de funções e suas aplicações.\n\n**3. CIÊNCIAS DA NATUREZA E SUAS TECNOLOGIAS (Física)**\n\n*   **Introdução à Física:** Vamos revisar medidas de comprimento e tempo, algarismos significativos e notação científica.\n*   **Cinemática Escalar:** Vamos estudar o movimento dos corpos, incluindo velocidade, aceleração e as funções horárias do movimento uniforme e uniformemente variado.\n*   **Dinâmica:** Vamos aprender sobre as leis de Newton, força, massa e peso.\n\nCom este plano, você estará preparado para enfrentar os desafios do exame e conquistar a sua vaga na universidade!"
+  },
+  {
+    "role": "user",
+    "text": "Vamos cmeçar com matemática"
+  }
+]

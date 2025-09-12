@@ -19,7 +19,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
+app.mount("/static", StaticFiles(directory="frontend/static/"), name="static")
 
 # 🧠 Múltiplas conexões de usuários
 active_connections = {}
@@ -107,6 +107,7 @@ async def logout(request: Request, response: Response):
     return {"message": "Logout realizado com sucesso."}
 
 # 💬 WebSocket autenticado
+# In api.py, /ws/chat endpoint
 @app.websocket("/ws/chat")
 async def websocket_chat(websocket: WebSocket):
     token = websocket.query_params.get("token")
@@ -129,7 +130,7 @@ async def websocket_chat(websocket: WebSocket):
     # Send user_info message
     await websocket.send_json({"type": "user_info", "username": user_id})
 
-    # Send chat history
+    # Send chat history even if AI initialization fails
     history = load_memory(user_id)
     await websocket.send_json({"type": "chat_history", "messages": history})
 
@@ -141,9 +142,14 @@ async def websocket_chat(websocket: WebSocket):
     print(f"[DEBUG] Conexão aceita para {user_id}")
     active_connections[user_id] = websocket
 
+    # Initialize chat, but handle network errors
     chat = criar_chat()
-    for h in history:
-        chat.send_message(h["text"])
+    try:
+        for h in history:
+            chat.send_message(h["text"])  # Attempt to initialize chat history
+    except Exception as e:
+        print(f"[DEBUG] Falha ao inicializar histórico no AI: {e}")
+        await websocket.send_json({"type": "error", "message": "Não foi possível conectar ao AI. Histórico local disponível."})
 
     try:
         while True:
@@ -152,9 +158,14 @@ async def websocket_chat(websocket: WebSocket):
 
             add_message(user_id, "user", pergunta)
 
-            loop = asyncio.get_running_loop()
-            response = await loop.run_in_executor(None, chat.send_message, pergunta)
-            resposta = response.candidates[0].content.parts[0].text.strip()
+            try:
+                loop = asyncio.get_running_loop()
+                response = await loop.run_in_executor(None, chat.send_message, pergunta)
+                resposta = response.candidates[0].content.parts[0].text.strip()
+            except Exception as e:
+                print(f"[ERROR] Falha ao obter resposta do AI: {e}")
+                resposta = "Desculpe, estou offline. Sua mensagem foi salva e será respondida quando a conexão for restaurada."
+                await websocket.send_json({"type": "error", "message": resposta})
 
             add_message(user_id, "ai", resposta)
             await websocket.send_text(resposta)
@@ -163,7 +174,7 @@ async def websocket_chat(websocket: WebSocket):
         print(f"[DEBUG] Desconectado: {user_id}")
     except Exception as e:
         print(f"[ERROR] Erro inesperado: {e}")
-        await websocket.send_text(f"Erro interno: {e}")
+        await websocket.send_json({"type": "error", "message": f"Erro interno: {e}"})
     finally:
         active_connections.pop(user_id, None)
         if user_id in online_users:

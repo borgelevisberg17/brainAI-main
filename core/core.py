@@ -1,6 +1,6 @@
 import os
-from google import genai
-from google.genai import types
+import google.generativeai as genai
+from google.generativeai import types
 from constants.settings import PERSONALIDADE as persona
 from dotenv import load_dotenv
 
@@ -12,13 +12,41 @@ Gemini_api = os.getenv('GEMINI_API_KEY')
 if not Gemini_api:
     raise ValueError("A variável de ambiente 'GEMINI_API_KEY' não foi definida.")
 
-# Cria cliente
-client = genai.Client(api_key=Gemini_api)
+# Configurações do modelo
+generation_config = {
+    "temperature": 1,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 8192,
+    "response_mime_type": "text/plain",
+}
+safety_settings = [
+    {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE",
+    },
+    {
+        "category": "HARM_CATEGORY_HATE_SPEECH",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE",
+    },
+    {
+        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE",
+    },
+    {
+        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE",
+    },
+]
 
-# Configurações do chat
-modelAI = 'gemini-2.0-flash'
-chat_config = types.GenerateContentConfig(system_instruction=persona)
+# Inicializa o modelo
+genai.configure(api_key=Gemini_api)
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    safety_settings=safety_settings,
+    generation_config=generation_config,
+    system_instruction=persona,
+)
 
-# Função que retorna um novo chat configurado
 def criar_chat():
-    return client.chats.create(model=modelAI, config=chat_config)
+    return model.start_chat(history=[])

@@ -150,6 +150,8 @@ async def websocket_chat(websocket: WebSocket):
     except Exception as e:
         print(f"[DEBUG] Falha ao inicializar histórico no AI: {e}")
         await websocket.send_json({"type": "error", "message": "Não foi possível conectar ao AI. Histórico local disponível."})
+        await websocket.close()
+        return
 
     try:
         while True:

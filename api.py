@@ -108,7 +108,7 @@ async def logout(request: Request, response: Response):
     return {"message": "Logout realizado com sucesso."}
     
 # 🚀 Endpoint público para o assistente do portfólio
-@@app.post("/api/portfolio/chat")
+@app.post("/api/portfolio/chat")
 async def portfolio_chat(payload: dict = Body(...)):
     pergunta = payload.get("message")
 

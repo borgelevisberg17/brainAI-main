@@ -15,6 +15,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPExcept
 SECRET_KEY = "supersecretkey"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
+from constants.settings import PERSONALIDADE
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
@@ -105,7 +106,27 @@ async def logout(request: Request, response: Response):
         response.delete_cookie("token")
         print("[DEBUG] Token adicionado à blacklist e cookie removido")
     return {"message": "Logout realizado com sucesso."}
+    
+# 🚀 Endpoint público para o assistente do portfólio
+@@app.post("/api/portfolio/chat")
+async def portfolio_chat(payload: dict = Body(...)):
+    pergunta = payload.get("message")
 
+    if not pergunta:
+        raise HTTPException(status_code=400, detail="Mensagem vazia")
+
+    try:
+        chat = criar_chat(contexto="assistente_portfolio", personalidade=PERSONALIDADE)
+        resposta = chat.send_message(pergunta)
+        texto = resposta.candidates[0].content.parts[0].text.strip()
+        # Limita a resposta a 200 caracteres
+        resposta_texto = (texto[:197] + "...") if len(texto) > 200 else texto
+    except Exception as e:
+        print(f"[ERROR] Falha no assistente do portfólio: {e}")
+        resposta_texto = "Desculpe, estou offline no momento."
+
+    return {"reply": resposta_texto}
+    
 # 💬 WebSocket autenticado
 # In api.py, /ws/chat endpoint
 @app.websocket("/ws/chat")

@@ -29,9 +29,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="frontend/static/"), name="static")
 
-# 🧠 Múltiplas conexões de usuários
-active_connections = {}
-
 # ❌ Blacklist para tokens expirados manualmente
 token_blacklist = set()
 active_connections = {}

@@ -1,21 +1,28 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Request, Response
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Request, Response, Body
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.websockets import WebSocketState
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from core.core import criar_chat
-from utils.memory_manager import load_memory, add_message
-from utils.user_manager import authenticate_user, get_user_by_username
+from typing import List
 import asyncio
 import os
-from typing import List
-from fastapi.websockets import WebSocketState
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Request, Body
-SECRET_KEY = "supersecretkey"
+from dotenv import load_dotenv
+
+from core.core import criar_chat
+from utils.memory_manager import load_memory, add_message
+from utils.user_manager import authenticate_user, get_user_by_username, create_user, user_exists
+from constants.settings import PERSONALIDADE
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
-from constants.settings import PERSONALIDADE
+
+if not SECRET_KEY:
+    raise ValueError("A variável de ambiente 'SECRET_KEY' não foi definida.")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
@@ -65,7 +72,6 @@ async def serve_index(request: Request):
 @app.get("/login")
 async def serve_login():
     return FileResponse(os.path.join("frontend", "login.html"))
-from utils.user_manager import create_user, user_exists
 
 @app.post("/register")
 async def register(user: dict = Body(...)):

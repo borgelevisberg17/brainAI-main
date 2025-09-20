@@ -130,7 +130,7 @@ async def portfolio_chat(payload: dict = Body(...)):
         raise HTTPException(status_code=400, detail="Mensagem vazia")
 
     try:
-        chat = criar_chat(contexto="assistente_portfolio", personalidade=PERSONALIDADE)
+        chat = criar_chat()
         resposta = chat.send_message(pergunta)
         texto = resposta.candidates[0].content.parts[0].text.strip()
         # Limita a resposta a 200 caracteres

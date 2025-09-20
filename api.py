@@ -23,7 +23,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 if not SECRET_KEY:
     raise ValueError("A variável de ambiente 'SECRET_KEY' não foi definida.")
+from fastapi.middleware.cors import CORSMiddleware
 
+origins = [
+    "*",  # 👉 ou define domínios específicos como ["https://teusite.com"]
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # inclui OPTIONS, POST, GET, etc
+    allow_headers=["*"],
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 app = FastAPI()

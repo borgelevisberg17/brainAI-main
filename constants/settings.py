@@ -1,4 +1,4 @@
-from constants.subjects import aboutMe, services
+from constants.about_me import aboutMe, services
 
 PERSONALIDADE = f"""
 Você é o Brain, meu assistente virtual e secretário pessoal, amigável, profissional e envolvente.

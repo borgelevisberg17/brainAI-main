@@ -134,7 +134,7 @@ async def portfolio_chat(payload: dict = Body(...)):
         resposta = chat.send_message(pergunta)
         texto = resposta.candidates[0].content.parts[0].text.strip()
         # Limita a resposta a 200 caracteres
-        resposta_texto = (texto[:197] + "...") if len(texto) > 200 else texto
+        resposta_texto = (texto[:397] + "...") if len(texto) > 400 else texto
     except Exception as e:
         print(f"[ERROR] Falha no assistente do portfólio: {e}")
         resposta_texto = "Desculpe, estou offline no momento."

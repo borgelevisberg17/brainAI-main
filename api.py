@@ -9,7 +9,7 @@ from typing import List
 import asyncio
 import os
 from dotenv import load_dotenv
-
+from fastapi.middleware.cors import CORSMiddleware
 from core.core import criar_chat
 from utils.memory_manager import load_memory, add_message
 from utils.user_manager import authenticate_user, get_user_by_username, create_user, user_exists
@@ -23,7 +23,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 if not SECRET_KEY:
     raise ValueError("A variável de ambiente 'SECRET_KEY' não foi definida.")
-from fastapi.middleware.cors import CORSMiddleware
 
 origins = [
     "*",  # 👉 ou define domínios específicos como ["https://teusite.com"]
@@ -121,8 +120,7 @@ async def logout(request: Request, response: Response):
         print("[DEBUG] Token adicionado à blacklist e cookie removido")
     return {"message": "Logout realizado com sucesso."}
     
-# 🚀 Endpoint público para o assistente do portfóliofrom datetime import datetime
-
+# 🚀 Endpoint público para o assistente do portfólio
 # Estrutura para armazenar sessões com timestamps
 chat_sessions = {}
 

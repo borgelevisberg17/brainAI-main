@@ -29,6 +29,10 @@ origins = [
     "*",  # 👉 ou define domínios específicos como ["https://teusite.com"]
 ]
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="frontend/static/"), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -36,11 +40,6 @@ app.add_middleware(
     allow_methods=["*"],  # inclui OPTIONS, POST, GET, etc
     allow_headers=["*"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
-
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="frontend/static/"), name="static")
-
 # ❌ Blacklist para tokens expirados manualmente
 token_blacklist = set()
 active_connections = {}

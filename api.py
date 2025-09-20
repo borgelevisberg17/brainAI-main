@@ -121,26 +121,53 @@ async def logout(request: Request, response: Response):
         print("[DEBUG] Token adicionado à blacklist e cookie removido")
     return {"message": "Logout realizado com sucesso."}
     
-# 🚀 Endpoint público para o assistente do portfólio
+# 🚀 Endpoint público para o assistente do portfóliofrom datetime import datetime
+
+# Estrutura para armazenar sessões com timestamps
+chat_sessions = {}
+
+# Tempo máximo de uma sessão em minutos
+SESSION_TIMEOUT = 30
+
+def cleanup_old_sessions():
+    current_time = datetime.now()
+    expired_sessions = [
+        session_id for session_id, (chat, timestamp) in chat_sessions.items()
+        if (current_time - timestamp).total_seconds() / 60 > SESSION_TIMEOUT
+    ]
+    for session_id in expired_sessions:
+        chat_sessions.pop(session_id, None)
+
 @app.post("/api/portfolio/chat")
 async def portfolio_chat(payload: dict = Body(...)):
+    cleanup_old_sessions()  # Limpa sessões antigas
+    
     pergunta = payload.get("message")
+    session_id = payload.get("session_id", "default")
 
     if not pergunta:
         raise HTTPException(status_code=400, detail="Mensagem vazia")
 
     try:
-        chat = criar_chat()
+        if session_id not in chat_sessions:
+            chat_sessions[session_id] = (criar_chat(), datetime.now())
+        else:
+            # Atualiza o timestamp da sessão
+            chat, _ = chat_sessions[session_id]
+            chat_sessions[session_id] = (chat, datetime.now())
+        
+        chat = chat_sessions[session_id][0]
         resposta = chat.send_message(pergunta)
         texto = resposta.candidates[0].content.parts[0].text.strip()
-        # Limita a resposta a 200 caracteres
         resposta_texto = (texto[:397] + "...") if len(texto) > 400 else texto
+        
     except Exception as e:
         print(f"[ERROR] Falha no assistente do portfólio: {e}")
         resposta_texto = "Desculpe, estou offline no momento."
+        chat_sessions.pop(session_id, None)
 
     return {"reply": resposta_texto}
-    
+
 # 💬 WebSocket autenticado
 # In api.py, /ws/chat endpoint
 @app.websocket("/ws/chat")

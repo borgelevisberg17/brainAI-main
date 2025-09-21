@@ -174,7 +174,7 @@ aboutMe = {
     "TensorFlow Developer Certificate"
   ],
   "tools": [
-    "Termux", "Acode", "GitHub", "Netlify", "Vercel", "Render", "Firebase", "Supabase",
+    "Termux", "Acode", "GitHub", "Netlify", "Vercel", "Render", "Firebase", "Supabase","Google Console",
     "Docker (learning)", "phpMyAdmin", "Linux CLI", "NPM/Yarn", "Postman",
     "VS Code", "Android Studio", "Kali Linux tools (planned)", "FFmpeg"
   ],

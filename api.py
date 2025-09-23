@@ -62,7 +62,9 @@ async def broadcast_online_users():
     for ws in user_sockets:
         if ws.application_state == WebSocketState.CONNECTED:
             await ws.send_json({"type": "online_users", "users": online_users})
-            
+@app.get("/ping")
+def ping():
+    return {"status": "online"}           
 # 🏠 Página principal
 @app.get("/")
 async def serve_index(request: Request):

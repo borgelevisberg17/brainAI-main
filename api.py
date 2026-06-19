@@ -10,7 +10,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from core.core import criar_chat
+from core.core import criar_chat  # Agora retorna o objeto de chat do novo google-genai
 from utils.memory_manager import load_memory, add_message
 from utils.user_manager import authenticate_user, get_user_by_username, create_user, user_exists
 from constants.settings import PERSONALIDADE
@@ -24,9 +24,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 if not SECRET_KEY:
     raise ValueError("A variável de ambiente 'SECRET_KEY' não foi definida.")
 
-origins = [
-    "*",  # 👉 ou define domínios específicos como ["https://teusite.com"]
-]
+origins = ["*"]
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
@@ -36,15 +34,15 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # inclui OPTIONS, POST, GET, etc
+    allow_methods=["*"],
     allow_headers=["*"],
 )
-# ❌ Blacklist para tokens expirados manualmente
+
 token_blacklist = set()
 active_connections = {}
 online_users: List[str] = []
 user_sockets: List[WebSocket] = []
-# 🔍 Verifica e retorna o usuário logado (e rejeita tokens na blacklist)
+
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     if token in token_blacklist:
         raise HTTPException(status_code=401, detail="Token inválido – logout feito")
@@ -62,10 +60,11 @@ async def broadcast_online_users():
     for ws in user_sockets:
         if ws.application_state == WebSocketState.CONNECTED:
             await ws.send_json({"type": "online_users", "users": online_users})
+
 @app.get("/ping")
 def ping():
     return {"status": "online"}           
-# 🏠 Página principal
+
 @app.get("/")
 async def serve_index(request: Request):
     token = request.cookies.get("token")
@@ -77,7 +76,6 @@ async def serve_index(request: Request):
         return RedirectResponse("/login", status_code=302)
     return FileResponse(os.path.join("frontend", "index.html"))
 
-# 🔐 Página de login
 @app.get("/login")
 async def serve_login():
     return FileResponse(os.path.join("frontend", "login.html"))
@@ -96,7 +94,7 @@ async def register(user: dict = Body(...)):
     create_user(username, password)
     print(f"[DEBUG] Novo usuário criado: {username}")
     return {"message": "Usuário registrado com sucesso"}
-# 🔑 Gera e retorna token
+
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     print("[DEBUG] Tentando autenticar usuário...")
@@ -112,7 +110,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     print(f"[DEBUG] Token gerado para {user['username']}")
     return {"access_token": token, "token_type": "bearer"}
 
-# 🚪 Logout fino – token entra na blacklist
 @app.post("/logout")
 async def logout(request: Request, response: Response):
     token = request.cookies.get("token")
@@ -122,11 +119,8 @@ async def logout(request: Request, response: Response):
         print("[DEBUG] Token adicionado à blacklist e cookie removido")
     return {"message": "Logout realizado com sucesso."}
     
-# 🚀 Endpoint público para o assistente do portfólio
-# Estrutura para armazenar sessões com timestamps
+# --- ENDPOINT DO ASSISTENTE DO PORTFÓLIO (ATUALIZADO) ---
 chat_sessions = {}
-
-# Tempo máximo de uma sessão em minutos
 SESSION_TIMEOUT = 30
 
 def cleanup_old_sessions():
@@ -140,7 +134,7 @@ def cleanup_old_sessions():
 
 @app.post("/api/portfolio/chat")
 async def portfolio_chat(payload: dict = Body(...)):
-    cleanup_old_sessions()  # Limpa sessões antigas
+    cleanup_old_sessions()
     
     pergunta = payload.get("message")
     session_id = payload.get("session_id", "default")
@@ -152,13 +146,15 @@ async def portfolio_chat(payload: dict = Body(...)):
         if session_id not in chat_sessions:
             chat_sessions[session_id] = (criar_chat(), datetime.now())
         else:
-            # Atualiza o timestamp da sessão
             chat, _ = chat_sessions[session_id]
             chat_sessions[session_id] = (chat, datetime.now())
         
         chat = chat_sessions[session_id][0]
+        
+        # Chamada adaptada para o novo SDK (client.chats)
         resposta = chat.send_message(pergunta)
-        texto = resposta.candidates[0].content.parts[0].text.strip()
+        texto = resposta.text.strip() if resposta.text else "Sem resposta."
+        
         resposta_texto = (texto[:397] + "...") if len(texto) > 400 else texto
         
     except Exception as e:
@@ -166,10 +162,9 @@ async def portfolio_chat(payload: dict = Body(...)):
         resposta_texto = "Desculpe, estou offline no momento."
         chat_sessions.pop(session_id, None)
 
-    return {"reply": resposta_texto}
+    return {"reply": respuesta_texto}
 
-# 💬 WebSocket autenticado
-# In api.py, /ws/chat endpoint
+# --- WEB_SOCKET AUTENTICADO (ATUALIZADO) ---
 @app.websocket("/ws/chat")
 async def websocket_chat(websocket: WebSocket):
     token = websocket.query_params.get("token")
@@ -189,10 +184,8 @@ async def websocket_chat(websocket: WebSocket):
     await websocket.accept()
     user_id = user["username"]
 
-    # Send user_info message
     await websocket.send_json({"type": "user_info", "username": user_id})
 
-    # Send chat history even if AI initialization fails
     history = load_memory(user_id)
     await websocket.send_json({"type": "chat_history", "messages": history})
 
@@ -204,11 +197,13 @@ async def websocket_chat(websocket: WebSocket):
     print(f"[DEBUG] Conexão aceita para {user_id}")
     active_connections[user_id] = websocket
 
-    # Initialize chat, but handle network errors
+    # Inicialização do Chat com o novo SDK da Google
     chat = criar_chat()
     try:
+        # Recomenda-se enviar apenas as mensagens de texto limpas ao reconstruir a sessão
         for h in history:
-            chat.send_message(h["text"])  # Attempt to initialize chat history
+            if isinstance(h, dict) and "text" in h:
+                chat.send_message(h["text"])
     except Exception as e:
         print(f"[DEBUG] Falha ao inicializar histórico no AI: {e}")
         await websocket.send_json({"type": "error", "message": "Não foi possível conectar ao AI. Histórico local disponível."})
@@ -224,8 +219,9 @@ async def websocket_chat(websocket: WebSocket):
 
             try:
                 loop = asyncio.get_running_loop()
+                # Mudança sutil: .text resolve direto o conteúdo da resposta no novo SDK
                 response = await loop.run_in_executor(None, chat.send_message, pergunta)
-                resposta = response.candidates[0].content.parts[0].text.strip()
+                resposta = response.text.strip() if response.text else "Mensagem recebida, mas resposta vazia."
             except Exception as e:
                 print(f"[ERROR] Falha ao obter resposta do AI: {e}")
                 resposta = "Desculpe, estou offline. Sua mensagem foi salva e será respondida quando a conexão for restaurada."

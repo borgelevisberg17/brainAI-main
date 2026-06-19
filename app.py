@@ -2,6 +2,7 @@ from core.core import criar_chat
 import asyncio
 
 async def main():
+    # Inicializa o chat usando a estrutura nova mapeada no seu core.py
     chat = criar_chat()
     print("🧠 Chat IA iniciado! Pergunte algo (ou digite 'sair' para encerrar)")
 
@@ -14,8 +15,12 @@ async def main():
 
         try:
             loop = asyncio.get_running_loop()
+            # Executa a chamada síncrona do SDK em um executor separado de forma não-bloqueante
             response = await loop.run_in_executor(None, chat.send_message, pergunta)
-            resposta = response.candidates[0].content.parts[0].text.strip()
+            
+            # Ajustado para o novo padrão do SDK google-genai
+            resposta = response.text.strip() if response.text else "Mensagem recebida, mas a resposta retornou vazia."
+            
         except Exception as e:
             resposta = f"Desculpa, houve um erro técnico: {e}"
 
@@ -34,4 +39,5 @@ async def main():
             break
 
 if __name__ == '__main__':
+    # Roda o loop assíncrono no terminal
     asyncio.run(main())
